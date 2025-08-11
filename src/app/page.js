@@ -1,129 +1,136 @@
 "use client";
-
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { ArrowUpTrayIcon } from "@heroicons/react/24/solid";
+import { toast, ToastContainer } from "react-toastify";
+import * as XLSX from "xlsx";
+import * as pdfjsLib from "pdfjs-dist";
 
 export default function Home() {
   const [file, setFile] = useState(null);
-  const [message, setMessage] = useState("");
-  const [jsonData, setJsonData] = useState(null);
+  const [companyType, setCompanyType] = useState("");
+  const inputRef = useRef();
 
-  // Log initial state and re-renders
-  console.log("Component state:", { file, message, jsonData });
-
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files?.[0];
-    console.log("Selected file:", selectedFile); // Log the raw file object
-
-    if (selectedFile) {
-      console.log("File details:", {
-        name: selectedFile.name,
-        type: selectedFile.type,
-        size: selectedFile.size,
-        lastModified: new Date(selectedFile.lastModified).toLocaleString(),
-      });
-
-      if (selectedFile.size > 1 * 1024 * 1024 * 1024) {
-        console.warn("File too large:", selectedFile.size);
-        setMessage(
-          "File size exceeds 1GB limit. Please upload a smaller file."
-        );
-        setFile(null);
-        setJsonData(null);
-        return;
-      }
-      setFile(selectedFile);
-      setMessage("");
-      setJsonData(null);
-    } else {
-      console.log("No file selected");
-      setMessage("Please select a file.");
-      setFile(null);
-    }
+  const handleClick = () => {
+    inputRef.current.click();
   };
 
-  const handleUpload = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!file) {
-      setMessage("No file selected.");
+    if (!file || !companyType) {
+      toast.error("Please select a file and company type");
       return;
     }
 
-    try {
-      setMessage("Uploading...");
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const rawText = event.target.result;
+      console.log("Raw file content:", rawText);
+
+      // Send to API
       const formData = new FormData();
       formData.append("file", file);
 
-      console.log("Uploading file:", file.name, file.type, file.size);
-
-      const response = await fetch("/api/upload", {
+      await fetch("/api/upload", {
         method: "POST",
+        body: formData
       });
 
-      // Check for HTML response (404)
-      const contentType = response.headers.get("content-type");
-      if (contentType?.includes("text/html")) {
-        throw new Error("API endpoint not found. Please check the server.");
-      }
+      console.log("File uploaded");
+    };
+    reader.readAsText(file);
 
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        throw new Error(
-          error.error || `Upload failed with status ${response.status}`
-        );
-      }
+    const ext = file.name.split(".").pop().toLowerCase();
 
-      const data = await response.json();
+    let rawData = [];
 
-      // Log everything to console
-      console.group("File Upload Results");
-      console.log("File Info:", {
-        name: data.fileName,
-        type: data.fileType,
-        size: data.size,
-      });
-      console.log("Parsed Data:", data.data);
-      console.groupEnd();
+    if (["xlsx", "xls", "csv"].includes(ext)) {
+      rawData = await readExcelOrCsv(file);
+    } else if (ext === "pdf") {
+      rawData = await readPdf(file);
+    } else {
+      alert("Unsupported file type");
+      return;
+    }
 
-      setMessage("File uploaded and converted successfully!");
-      setJsonData(data.data);
-    } catch (error) {
-      console.error("Upload Error:", error);
-      setMessage(error.message || "Upload failed");
+    console.log("Extracted Raw Data:", rawData);
+
+    // Process into deposit/withdrawal payload
+    const payload = createPayload(rawData, "admin");
+
+    // const formData = new FormData();
+    // formData.append("file", file);
+    // formData.append("companyType", companyType);
+
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: payload,
+    });
+
+    if (res.ok) {
+      toast.success("File uploaded successfully!");
+    } else {
+      toast.error("Upload failed");
     }
   };
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start w-full max-w-2xl">
-        <h1 className="text-2xl font-bold">
-          Upload File (PDF, CSV, XLSX, XLS)
-        </h1>
-        <form
-          onSubmit={handleUpload}
-          className="flex flex-col gap-4 items-center w-full"
-        >
-          <input
-            type="file"
-            accept=".pdf,.csv,.xlsx,.xls"
-            onChange={handleFileChange}
-            className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-          />
-          <button
-            type="submit"
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-          >
-            Upload & Convert to JSON
-          </button>
-        </form>
-        {message && <p className="text-red-500">{message}</p>}
-        {jsonData && (
-          <div className="mt-4 w-full">
-            <h2 className="text-xl font-semibold">Converted JSON:</h2>
-            <pre className="bg-gray-100 p-4 rounded overflow-auto max-h-96">
-              {JSON.stringify(jsonData, null, 2)}
-            </pre>
+    <>
+      <ToastContainer position="top-right" autoClose={3000} />
+      <div className="bg-white p-6 rounded-lg shadow-lg max-w-lg">
+        <h2 className="text-2xl font-semibold mb-4">Upload File</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block mb-1 font-medium">Select Panel</label>
+            <select
+              value={companyType}
+              onChange={(e) => setCompanyType(e.target.value)}
+              className="w-full border p-2 rounded"
+            >
+              <option value="">-- Select --</option>
+              <option value="IT">Anna247</option>
+              <option value="Finance">Anna777</option>
+            </select>
           </div>
-        )}
-      </main>
-    </div>
+
+          <div className="flex flex-col max-w-md mx-auto p-4">
+            <label className="block mb-1 font-medium text-gray-500 text-sm sm:text-base">
+              Upload File
+            </label>
+
+            <input
+              type="file"
+              ref={inputRef}
+              onChange={(e) => setFile(e.target.files[0])}
+              className="hidden"
+            />
+
+            <button
+              type="button"
+              onClick={handleClick}
+              className="flex items-center justify-center text-white bg-purple-500 rounded-xl gap-2 py-2 px-4 hover:bg-purple-700 transition
+               text-sm sm:text-base"
+            >
+              <ArrowUpTrayIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+              Select File
+            </button>
+
+            {file && (
+              <span className="mt-2 text-gray-700 text-xs sm:text-sm break-words">
+                Selected file: {file.name}
+              </span>
+            )}
+
+            <button
+              type="submit"
+              className="flex items-center w-full justify-center text-white bg-purple-500 rounded-xl py-2 px-4 hover:bg-purple-700 transition mt-4
+               text-sm sm:text-base"
+            >
+              Submit
+            </button>
+          </div>
+        </form>
+      </div>
+    </>
   );
 }
