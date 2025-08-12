@@ -1,0 +1,13 @@
+{
+  "env": {
+      "browser": true,
+      "node": true
+  },
+  "extends": ["next/core-web-vitals"],
+  "rules": {
+    "react/react-in-jsx-scope": "off",
+    "react/prop-types": "off", 
+    "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+    "no-console": ["warn", { "allow": ["warn", "error"] }]
+  }
+}

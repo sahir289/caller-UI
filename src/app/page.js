@@ -1,78 +1,79 @@
 "use client";
+import React from 'react';
 import { useState, useRef } from "react";
 import { ArrowUpTrayIcon } from "@heroicons/react/24/solid";
 import { toast, ToastContainer } from "react-toastify";
-import * as XLSX from "xlsx";
-import * as pdfjsLib from "pdfjs-dist";
+// import * as XLSX from "xlsx";
+// import * as pdfjsLib from "pdfjs-dist";
+import { BASEURL } from "./utils/baseUrl";
 
 export default function Home() {
-  const [file, setFile] = useState(null);
-  const [companyType, setCompanyType] = useState("");
-  const inputRef = useRef();
+  const allowedFileTypes = [
+    "application/pdf",
+    "application/vnd.ms-excel", // for .xls
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  ];
+
+  const inputRef = useRef(null);
+  // const [uploading, setUploading] = useState(false);
+  // const [progress, setProgress] = useState(0);
+  // const [error, setError] = useState(null);
+  // const [successMsg, setSuccessMsg] = useState(null);
 
   const handleClick = () => {
+    // setError(null);
+    // setSuccessMsg(null);
     inputRef.current.click();
   };
+  console.log("BASEURL:", BASEURL);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("first");
+
+    const file = e.target.files[0];
     if (!file || !companyType) {
       toast.error("Please select a file and company type");
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const rawText = event.target.result;
-      console.log("Raw file content:", rawText);
-
-      // Send to API
-      const formData = new FormData();
-      formData.append("file", file);
-
-      await fetch("/api/upload", {
-        method: "POST",
-        body: formData
-      });
-
-      console.log("File uploaded");
-    };
-    reader.readAsText(file);
-
-    const ext = file.name.split(".").pop().toLowerCase();
-
-    let rawData = [];
-
-    if (["xlsx", "xls", "csv"].includes(ext)) {
-      rawData = await readExcelOrCsv(file);
-    } else if (ext === "pdf") {
-      rawData = await readPdf(file);
-    } else {
-      alert("Unsupported file type");
+    if (!allowedFileTypes.includes(file.type)) {
+      toast.error(`Unsupported file type. Please upload PDF or Excel files`);
       return;
     }
 
-    console.log("Extracted Raw Data:", rawData);
+    // Validate size (limit 50MB)
+    const maxSizeMB = 50;
+    if (file.size > maxSizeMB * 1024 * 1024) {
+      toast.error(`File size exceeds ${maxSizeMB}MB limit.`);
+      return;
+    }
 
-    // Process into deposit/withdrawal payload
-    const payload = createPayload(rawData, "admin");
+    try {
+      const formData = new FormData();
+      console.log("hello", "fileee");
+      formData.append("file", file);
 
-    // const formData = new FormData();
-    // formData.append("file", file);
-    // formData.append("companyType", companyType);
+      const res = await fetch(`${BASEURL}/api/users/upload`, {
+        method: "POST",
+        // headers: { "Content-Type": "application/json" },
+        body: formData,
+      });
 
-    const res = await fetch("/api/upload", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: payload,
-    });
-
-    if (res.ok) {
-      toast.success("File uploaded successfully!");
-    } else {
-      toast.error("Upload failed");
+      if (res.ok) {
+        toast.success("File uploaded successfully!");
+      } else {
+        toast.error("Upload failed");
+      }
+    } catch (err) {
+      console.error("Upload error:", err);
+    //   setUploading(false);
+      toast.error("Unexpected error occurred.");
     }
   };
+
+  const [file, setFile] = useState(null);
+  const [companyType, setCompanyType] = useState("");
 
   return (
     <>

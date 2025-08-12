@@ -1,3 +1,6 @@
+/* eslint-disable react/prop-types */
+
+import React from 'react';
 import Header from './components/Header'
 import Sidebar from './components/Sidebar'
 import './globals.css'
@@ -6,6 +9,7 @@ export const metadata = {
   title: 'File Upload Project',
   description: 'Upload files with company type',
 }
+
 
 export default function RootLayout({ children }) {
   return (
