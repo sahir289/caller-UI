@@ -8,11 +8,8 @@ import { toast, ToastContainer } from "react-toastify";
 import { BASEURL } from "./utils/baseUrl";
 
 export default function Home() {
-  const allowedFileTypes = [
-    "application/pdf",
-    "application/vnd.ms-excel", // for .xls
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  ];
+  const [file, setFile] = useState(null);
+  const [companyType, setCompanyType] = useState("");
 
   const inputRef = useRef(null);
   // const [uploading, setUploading] = useState(false);
@@ -20,18 +17,27 @@ export default function Home() {
   // const [error, setError] = useState(null);
   // const [successMsg, setSuccessMsg] = useState(null);
 
+  const allowedFileTypes = [
+    "application/pdf",
+    "application/vnd.ms-excel", // for .xls
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  ];
+
+
   const handleClick = () => {
     // setError(null);
     // setSuccessMsg(null);
     inputRef.current.click();
   };
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+  }
   console.log("BASEURL:", BASEURL);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("first");
 
-    const file = e.target.files[0];
     if (!file || !companyType) {
       toast.error("Please select a file and company type");
       return;
@@ -50,8 +56,7 @@ export default function Home() {
     }
 
     try {
-      const formData = new FormData();
-      console.log("hello", "fileee");
+      const formData = new FormData();  
       formData.append("file", file);
 
       const res = await fetch(`${BASEURL}/api/users/upload`, {
@@ -59,6 +64,7 @@ export default function Home() {
         // headers: { "Content-Type": "application/json" },
         body: formData,
       });
+      console.log(res, "res");
 
       if (res.ok) {
         toast.success("File uploaded successfully!");
@@ -71,9 +77,6 @@ export default function Home() {
       toast.error("Unexpected error occurred.");
     }
   };
-
-  const [file, setFile] = useState(null);
-  const [companyType, setCompanyType] = useState("");
 
   return (
     <>
@@ -102,7 +105,7 @@ export default function Home() {
             <input
               type="file"
               ref={inputRef}
-              onChange={(e) => setFile(e.target.files[0])}
+              onChange={handleFileChange}
               className="hidden"
             />
 
