@@ -1,5 +1,5 @@
 "use client";
-import React from 'react';
+import React from "react";
 import { useState, useRef } from "react";
 import { ArrowUpTrayIcon } from "@heroicons/react/24/solid";
 import { toast, ToastContainer } from "react-toastify";
@@ -11,11 +11,12 @@ export default function Home() {
   const [file, setFile] = useState(null);
   const [fileData, setFileData] = useState(null);
   const [companyType, setCompanyType] = useState("");
-  const [companyTypePairing, setCompanyTypePairing] = useState("");
+  //   const [companyTypePairing, setCompanyTypePairing] = useState("");
 
   const inputRef = useRef(null);
   const inputRefPairing = useRef(null);
-  // const [uploading, setUploading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadingPairing, setUploadingPairing] = useState(false);
   // const [progress, setProgress] = useState(0);
   // const [error, setError] = useState(null);
   // const [successMsg, setSuccessMsg] = useState(null);
@@ -24,8 +25,8 @@ export default function Home() {
     "application/pdf",
     "application/vnd.ms-excel", // for .xls
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "text/csv", // for .csv
   ];
-
 
   const handleClick = () => {
     inputRef.current.click();
@@ -33,20 +34,20 @@ export default function Home() {
 
   const handleClickPairing = () => {
     inputRefPairing.current.click();
-  }
+  };
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
-  }
+  };
 
   const handleFileChangePairing = (e) => {
     setFileData(e.target.files[0]);
-  }
+  };
   console.log("BASEURL:", BASEURL);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("first");
+    setUploading(true);
     console.log(file, companyType, "9999");
 
     if (!file || !companyType) {
@@ -67,10 +68,11 @@ export default function Home() {
     }
 
     try {
-      const formData = new FormData();  
+      const formData = new FormData();
       formData.append("file", file);
+      formData.append("company_name", companyType);
 
-      const res = await fetch(`${BASEURL}/api/users/upload`, {
+      const res = await fetch(`${BASEURL}/v1/history/createHistory`, {
         method: "POST",
         // headers: { "Content-Type": "application/json" },
         body: formData,
@@ -82,19 +84,21 @@ export default function Home() {
       } else {
         toast.error("Upload failed");
       }
+      setUploading(false);
     } catch (err) {
       console.error("Upload error:", err);
-    //   setUploading(false);
+      //   setUploading(false);
       toast.error("Unexpected error occurred.");
     }
   };
 
-  const handleSubmitPairing  = async (e) => {
+  const handleSubmitPairing = async (e) => {
     e.preventDefault();
+    setUploadingPairing(true);
     console.log("first");
 
-    if (!fileData || !companyTypePairing) {
-      toast.error("Please select a file and company type");
+    if (!fileData) {
+      toast.error("Please select a file ");
       return;
     }
 
@@ -111,10 +115,11 @@ export default function Home() {
     }
 
     try {
-      const formData = new FormData();  
+      const formData = new FormData();
       formData.append("file", fileData);
+      //   formData.append("companyTypePairing", companyTypePairing);
 
-      const res = await fetch(`${BASEURL}/api/users/upload-pairing`, {
+      const res = await fetch(`${BASEURL}/v1/agents/pairAgentwitUser`, {
         method: "POST",
         // headers: { "Content-Type": "application/json" },
         body: formData,
@@ -126,9 +131,10 @@ export default function Home() {
       } else {
         toast.error("Upload failed");
       }
+      setUploadingPairing(false);
     } catch (err) {
       console.error("Upload error:", err);
-    //   setUploading(false);
+      //   setUploading(false);
       toast.error("Unexpected error occurred.");
     }
   };
@@ -147,8 +153,8 @@ export default function Home() {
               className="w-full border p-2 rounded"
             >
               <option value="">-- Select --</option>
-              <option value="IT">Anna247</option>
-              <option value="Finance">Anna777</option>
+              <option value="Anna247">Anna247</option>
+              <option value="Anna777">Anna777</option>
             </select>
           </div>
 
@@ -182,19 +188,48 @@ export default function Home() {
 
             <button
               type="submit"
+              disabled={uploading}
               className="flex items-center w-full justify-center text-white bg-purple-500 rounded-xl py-2 px-4 hover:bg-purple-700 transition mt-4
                text-sm sm:text-base"
             >
-              Submit
+              {uploading ? (
+                <>
+                  <svg
+                    className="animate-spin h-5 w-5 mr-3 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                    ></path>
+                  </svg>
+                  Uploading...
+                </>
+              ) : (
+                "Submit"
+              )}
             </button>
           </div>
         </form>
       </div>
 
       <div className="bg-white mt-4 p-6 rounded-lg shadow-lg max-w-lg">
-        <h2 className="text-2xl font-semibold mb-4">Upload Users Pairing File</h2>
+        <h2 className="text-2xl font-semibold mb-4">
+          Upload Users Pairing File
+        </h2>
         <form onSubmit={handleSubmitPairing} className="space-y-4">
-          <div>
+          {/* <div>
             <label className="block mb-1 font-medium">Select Panel</label>
             <select
               value={companyTypePairing}
@@ -205,7 +240,7 @@ export default function Home() {
               <option value="IT">Anna247</option>
               <option value="Finance">Anna777</option>
             </select>
-          </div>
+          </div> */}
 
           <div className="flex flex-col max-w-md mx-auto p-4">
             <label className="block mb-1 font-medium text-gray-500 text-sm sm:text-base">
@@ -237,10 +272,37 @@ export default function Home() {
 
             <button
               type="submit"
+              disabled={uploadingPairing}
               className="flex items-center w-full justify-center text-white bg-purple-500 rounded-xl py-2 px-4 hover:bg-purple-700 transition mt-4
                text-sm sm:text-base"
             >
-              Submit
+              {uploadingPairing ? (
+                <>
+                  <svg
+                    className="animate-spin h-5 w-5 mr-3 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                    ></path>
+                  </svg>
+                  Uploading...
+                </>
+              ) : (
+                "Submit"
+              )}
             </button>
           </div>
         </form>
