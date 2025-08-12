@@ -9,9 +9,12 @@ import { BASEURL } from "./utils/baseUrl";
 
 export default function Home() {
   const [file, setFile] = useState(null);
+  const [fileData, setFileData] = useState(null);
   const [companyType, setCompanyType] = useState("");
+  const [companyTypePairing, setCompanyTypePairing] = useState("");
 
   const inputRef = useRef(null);
+  const inputRefPairing = useRef(null);
   // const [uploading, setUploading] = useState(false);
   // const [progress, setProgress] = useState(0);
   // const [error, setError] = useState(null);
@@ -25,18 +28,26 @@ export default function Home() {
 
 
   const handleClick = () => {
-    // setError(null);
-    // setSuccessMsg(null);
     inputRef.current.click();
   };
+
+  const handleClickPairing = () => {
+    inputRefPairing.current.click();
+  }
+
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
+  }
+
+  const handleFileChangePairing = (e) => {
+    setFileData(e.target.files[0]);
   }
   console.log("BASEURL:", BASEURL);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("first");
+    console.log(file, companyType, "9999");
 
     if (!file || !companyType) {
       toast.error("Please select a file and company type");
@@ -60,6 +71,50 @@ export default function Home() {
       formData.append("file", file);
 
       const res = await fetch(`${BASEURL}/api/users/upload`, {
+        method: "POST",
+        // headers: { "Content-Type": "application/json" },
+        body: formData,
+      });
+      console.log(res, "res");
+
+      if (res.ok) {
+        toast.success("File uploaded successfully!");
+      } else {
+        toast.error("Upload failed");
+      }
+    } catch (err) {
+      console.error("Upload error:", err);
+    //   setUploading(false);
+      toast.error("Unexpected error occurred.");
+    }
+  };
+
+  const handleSubmitPairing  = async (e) => {
+    e.preventDefault();
+    console.log("first");
+
+    if (!fileData || !companyTypePairing) {
+      toast.error("Please select a file and company type");
+      return;
+    }
+
+    if (!allowedFileTypes.includes(fileData.type)) {
+      toast.error(`Unsupported file type. Please upload PDF or Excel files`);
+      return;
+    }
+
+    // Validate size (limit 50MB)
+    const maxSizeMB = 50;
+    if (fileData.size > maxSizeMB * 1024 * 1024) {
+      toast.error(`File size exceeds ${maxSizeMB}MB limit.`);
+      return;
+    }
+
+    try {
+      const formData = new FormData();  
+      formData.append("file", fileData);
+
+      const res = await fetch(`${BASEURL}/api/users/upload-pairing`, {
         method: "POST",
         // headers: { "Content-Type": "application/json" },
         body: formData,
@@ -138,12 +193,12 @@ export default function Home() {
 
       <div className="bg-white mt-4 p-6 rounded-lg shadow-lg max-w-lg">
         <h2 className="text-2xl font-semibold mb-4">Upload Users Pairing File</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmitPairing} className="space-y-4">
           <div>
             <label className="block mb-1 font-medium">Select Panel</label>
             <select
-              value={companyType}
-              onChange={(e) => setCompanyType(e.target.value)}
+              value={companyTypePairing}
+              onChange={(e) => setCompanyTypePairing(e.target.value)}
               className="w-full border p-2 rounded"
             >
               <option value="">-- Select --</option>
@@ -159,14 +214,14 @@ export default function Home() {
 
             <input
               type="file"
-              ref={inputRef}
-              onChange={handleFileChange}
+              ref={inputRefPairing}
+              onChange={handleFileChangePairing}
               className="hidden"
             />
 
             <button
               type="button"
-              onClick={handleClick}
+              onClick={handleClickPairing}
               className="flex items-center justify-center text-white bg-purple-500 rounded-xl gap-2 py-2 px-4 hover:bg-purple-700 transition
                text-sm sm:text-base"
             >
@@ -174,9 +229,9 @@ export default function Home() {
               Select File
             </button>
 
-            {file && (
+            {fileData && (
               <span className="mt-2 text-gray-700 text-xs sm:text-sm break-words">
-                Selected file: {file.name}
+                Selected file: {fileData.name}
               </span>
             )}
 
