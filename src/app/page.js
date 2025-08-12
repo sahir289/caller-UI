@@ -82,7 +82,7 @@ export default function Home() {
     <>
       <ToastContainer position="top-right" autoClose={3000} />
       <div className="bg-white p-6 rounded-lg shadow-lg max-w-lg">
-        <h2 className="text-2xl font-semibold mb-4">Upload File</h2>
+        <h2 className="text-2xl font-semibold mb-4">Upload Users Data File</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block mb-1 font-medium">Select Panel</label>
@@ -99,7 +99,62 @@ export default function Home() {
 
           <div className="flex flex-col max-w-md mx-auto p-4">
             <label className="block mb-1 font-medium text-gray-500 text-sm sm:text-base">
-              Upload File
+              Upload Users Data File
+            </label>
+
+            <input
+              type="file"
+              ref={inputRef}
+              onChange={handleFileChange}
+              className="hidden"
+            />
+
+            <button
+              type="button"
+              onClick={handleClick}
+              className="flex items-center justify-center text-white bg-purple-500 rounded-xl gap-2 py-2 px-4 hover:bg-purple-700 transition
+               text-sm sm:text-base"
+            >
+              <ArrowUpTrayIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+              Select Users File
+            </button>
+
+            {file && (
+              <span className="mt-2 text-gray-700 text-xs sm:text-sm break-words">
+                Selected file: {file.name}
+              </span>
+            )}
+
+            <button
+              type="submit"
+              className="flex items-center w-full justify-center text-white bg-purple-500 rounded-xl py-2 px-4 hover:bg-purple-700 transition mt-4
+               text-sm sm:text-base"
+            >
+              Submit
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div className="bg-white mt-4 p-6 rounded-lg shadow-lg max-w-lg">
+        <h2 className="text-2xl font-semibold mb-4">Upload Users Pairing File</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block mb-1 font-medium">Select Panel</label>
+            <select
+              value={companyType}
+              onChange={(e) => setCompanyType(e.target.value)}
+              className="w-full border p-2 rounded"
+            >
+              <option value="">-- Select --</option>
+              <option value="IT">Anna247</option>
+              <option value="Finance">Anna777</option>
+            </select>
+          </div>
+
+          <div className="flex flex-col max-w-md mx-auto p-4">
+            <label className="block mb-1 font-medium text-gray-500 text-sm sm:text-base">
+              Upload Users Pairing File
             </label>
 
             <input
