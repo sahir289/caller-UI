@@ -45,25 +45,34 @@ export default function Home() {
   };
   console.log("BASEURL:", BASEURL);
 
+  // "No token provided";
+  // "Token expired";
+  // "Invalid token";
+  const handleTokenError = () => {
+    localStorage.clear();
+    window.location.reload();
+  }
   const handleSubmit = async (e) => {
     e.preventDefault();
     setUploading(true);
-    console.log(file, companyType, "9999");
+    const token = localStorage.getItem("accessToken");
 
     if (!file || !companyType) {
       toast.error("Please select a file and company type");
+      setUploading(false);
       return;
     }
 
     if (!allowedFileTypes.includes(file.type)) {
       toast.error(`Unsupported file type. Please upload PDF or Excel files`);
+      setUploading(false);
       return;
     }
 
-    // Validate size (limit 50MB)
     const maxSizeMB = 50;
     if (file.size > maxSizeMB * 1024 * 1024) {
       toast.error(`File size exceeds ${maxSizeMB}MB limit.`);
+      setUploading(false);
       return;
     }
 
@@ -74,70 +83,92 @@ export default function Home() {
 
       const res = await fetch(`${BASEURL}/v1/history/createHistory`, {
         method: "POST",
-        // headers: { "Content-Type": "application/json" },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         body: formData,
       });
-      console.log(res, "res");
+
+      const data = await res.json();
 
       if (res.ok) {
         toast.success("File uploaded successfully!");
+      } else if (
+        data.message === "No token provided" ||
+        data.message === "Token expired" ||
+        data.message === "Invalid token"
+      ) {
+        toast.error(data.message);
+        handleTokenError();
       } else {
         toast.error("Upload failed");
       }
-      setUploading(false);
     } catch (err) {
       console.error("Upload error:", err);
-      //   setUploading(false);
       toast.error("Unexpected error occurred.");
+    } finally {
+      setUploading(false);
     }
   };
 
   const handleSubmitPairing = async (e) => {
     e.preventDefault();
     setUploadingPairing(true);
-    console.log("first");
+    const token = localStorage.getItem("accessToken");
 
     if (!fileData) {
-      toast.error("Please select a file ");
+      toast.error("Please select a file");
+      setUploadingPairing(false);
       return;
     }
 
     if (!allowedFileTypes.includes(fileData.type)) {
       toast.error(`Unsupported file type. Please upload PDF or Excel files`);
+      setUploadingPairing(false);
       return;
     }
 
-    // Validate size (limit 50MB)
     const maxSizeMB = 50;
     if (fileData.size > maxSizeMB * 1024 * 1024) {
       toast.error(`File size exceeds ${maxSizeMB}MB limit.`);
+      setUploadingPairing(false);
       return;
     }
 
     try {
       const formData = new FormData();
       formData.append("file", fileData);
-      //   formData.append("companyTypePairing", companyTypePairing);
 
       const res = await fetch(`${BASEURL}/v1/agents/pairAgentwitUser`, {
         method: "POST",
-        // headers: { "Content-Type": "application/json" },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         body: formData,
       });
-      console.log(res, "res");
+
+      const data = await res.json();
 
       if (res.ok) {
         toast.success("File uploaded successfully!");
+      } else if (
+        data.message === "No token provided" ||
+        data.message === "Token expired" ||
+        data.message === "Invalid token"
+      ) {
+        toast.error(data.message);
+        handleTokenError();
       } else {
         toast.error("Upload failed");
       }
-      setUploadingPairing(false);
     } catch (err) {
       console.error("Upload error:", err);
-      //   setUploading(false);
       toast.error("Unexpected error occurred.");
+    } finally {
+      setUploadingPairing(false);
     }
-  };
+  
+  }
 
   return (
     <>
@@ -150,7 +181,7 @@ export default function Home() {
             <select
               value={companyType}
               onChange={(e) => setCompanyType(e.target.value)}
-              className="w-full border p-2 rounded"
+              className="w-full border p-2 rounded cursor-pointer"
             >
               <option value="">-- Select --</option>
               <option value="Anna247">Anna247</option>
@@ -159,7 +190,7 @@ export default function Home() {
           </div>
 
           <div className="flex flex-col max-w-md mx-auto p-4">
-            <label className="block mb-1 font-medium text-gray-500 text-sm sm:text-base">
+            <label className="block mb-1 font-medium text-gray-500 text-sm sm:text-base ">
               Upload Users Data File
             </label>
 
@@ -174,7 +205,7 @@ export default function Home() {
               type="button"
               onClick={handleClick}
               className="flex items-center justify-center text-white bg-purple-500 rounded-xl gap-2 py-2 px-4 hover:bg-purple-700 transition
-               text-sm sm:text-base"
+               text-sm sm:text-base cursor-pointer"
             >
               <ArrowUpTrayIcon className="w-5 h-5 sm:w-6 sm:h-6" />
               Select Users File
@@ -190,7 +221,7 @@ export default function Home() {
               type="submit"
               disabled={uploading}
               className="flex items-center w-full justify-center text-white bg-purple-500 rounded-xl py-2 px-4 hover:bg-purple-700 transition mt-4
-               text-sm sm:text-base"
+               text-sm sm:text-base cursor-pointer"
             >
               {uploading ? (
                 <>
@@ -258,7 +289,7 @@ export default function Home() {
               type="button"
               onClick={handleClickPairing}
               className="flex items-center justify-center text-white bg-purple-500 rounded-xl gap-2 py-2 px-4 hover:bg-purple-700 transition
-               text-sm sm:text-base"
+               text-sm sm:text-base cursor-pointer"
             >
               <ArrowUpTrayIcon className="w-5 h-5 sm:w-6 sm:h-6" />
               Select File
@@ -274,7 +305,7 @@ export default function Home() {
               type="submit"
               disabled={uploadingPairing}
               className="flex items-center w-full justify-center text-white bg-purple-500 rounded-xl py-2 px-4 hover:bg-purple-700 transition mt-4
-               text-sm sm:text-base"
+               text-sm sm:text-base cursor-pointer"
             >
               {uploadingPairing ? (
                 <>
