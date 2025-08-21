@@ -98,7 +98,7 @@ export default function Home() {
         data.message === "Token expired" ||
         data.message === "Invalid token"
       ) {
-        toast.error(data.message);
+        toast.error("Login Expired! Please Login Again");
         handleTokenError();
       } else {
         toast.error("Upload failed");
@@ -156,7 +156,7 @@ export default function Home() {
         data.message === "Token expired" ||
         data.message === "Invalid token"
       ) {
-        toast.error(data.message);
+        toast.error("Login Expired! Please Login Again");
         handleTokenError();
       } else {
         toast.error("Upload failed");
@@ -167,7 +167,6 @@ export default function Home() {
     } finally {
       setUploadingPairing(false);
     }
-  
   }
 
   return (

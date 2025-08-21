@@ -2,8 +2,8 @@ import React from 'react';
 
 export default function Header() {
   const handleLogout = () => {
-    localStorage.clear(); // Clear all localStorage data (including accessToken)
-    window.location.reload(); // Reload the page
+    localStorage.clear(); 
+    window.location.reload();
   };
 
   return (

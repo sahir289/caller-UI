@@ -1,14 +1,14 @@
-"use client"
-
-import React from 'react';
-import { useState } from "react";
+"use client";
+import { usePathname, useRouter } from "next/navigation";
+import React from "react";
 
 export default function Sidebar() {
-  const [active, setActive] = useState("Upload");
+  const router = useRouter();
+  const pathname = usePathname();
 
   const menu = [
     { name: "Upload", path: "/" },
-    // { name: "History", path: "/history" }
+    { name: "Records", path: "/records" },
   ];
 
   return (
@@ -19,9 +19,9 @@ export default function Sidebar() {
           <li
             key={item.name}
             className={`cursor-pointer p-2 rounded-md ${
-              active === item.name ? "bg-purple-500 text-white" : "hover:bg-gray-200"
+              pathname === item.path ? "bg-purple-500 text-white" : "hover:bg-gray-200"
             }`}
-            onClick={() => setActive(item.name)}
+            onClick={() => router.push(item.path)}
           >
             {item.name}
           </li>
