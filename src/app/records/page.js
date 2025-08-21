@@ -3,10 +3,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { BASEURL } from "../utils/baseUrl";
 import { formatToDubai12Hour } from "../utils/formattime";
+import { toast, ToastContainer } from "react-toastify";
 
 const RecordsPage = () => {
   const [records, setRecords] = useState([]);
@@ -32,9 +32,17 @@ const RecordsPage = () => {
           }
         );
 
-        if (!res.ok) throw new Error("Failed to fetch records");
-
+        if (!res.ok) toast.error("Failed to fetch records");
         const result = await res.json();
+        if (
+          result.message === "Token expired" ||
+          result.message === "Invalid token"
+        ) {
+          toast.error("Login Expired! Please Login Again");
+          localStorage.clear();
+          window.location.reload();
+          return
+        }
         setRecords(result.data.data);
         setTotalPages(Math.ceil(result.data.totalCount / rowsPerPage));
         setTotalCount(result.data.totalCount);
