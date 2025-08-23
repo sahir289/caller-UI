@@ -101,7 +101,7 @@ export default function Home() {
         toast.error("Login Expired! Please Login Again");
         handleTokenError();
       } else {
-        toast.error("Upload failed");
+        toast.error(data.message);
       }
     } catch (err) {
       console.error("Upload error:", err);
@@ -159,7 +159,7 @@ export default function Home() {
         toast.error("Login Expired! Please Login Again");
         handleTokenError();
       } else {
-        toast.error("Upload failed");
+        toast.error(data.message);
       }
     } catch (err) {
       console.error("Upload error:", err);

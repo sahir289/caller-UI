@@ -33,10 +33,9 @@ export default function Login() {
       });
 
       const data = await res.json();
-
-      if (res.ok && data.accessToken) {
-        localStorage.setItem("accessToken", data.accessToken);
-        toast.success("Login successful!");
+      if (res.ok && data.data) {
+        localStorage.setItem("accessToken", data.data);
+        toast.success(data.message);
         setTimeout(() => {
           window.location.reload();
         }, 500);
