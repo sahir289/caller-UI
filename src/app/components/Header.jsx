@@ -2,8 +2,8 @@ import React from 'react';
 
 export default function Header() {
   const handleLogout = () => {
-    localStorage.clear(); 
-    window.location.reload();
+    localStorage.clear();
+    window.location.href = "/";
   };
 
   return (
@@ -11,7 +11,7 @@ export default function Header() {
       <h1 className="text-xl font-semibold">File Upload Portal</h1>
       <button
         onClick={handleLogout}
-        className="bg-purple-500 text-white cursor-pointer px-4 py-2 rounded hover:bg-purple-700"
+        className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-700 transition-colors"
       >
         Logout
       </button>

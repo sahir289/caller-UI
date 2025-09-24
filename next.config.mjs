@@ -1,10 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  api: {
-    bodyParser: {
-      sizeLimit: "10mb", // or '50mb' or '1gb' depending on your needs
-    },
-  },
+  // API configuration is now handled in individual API routes
 };
 
 export default nextConfig;

@@ -7,7 +7,7 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   const menu = [
-    { name: "Upload", path: "/" },
+    { name: "Upload", path: "/upload" },
     { name: "Records", path: "/records" },
   ];
 
