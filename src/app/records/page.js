@@ -64,8 +64,8 @@ const RecordsPage = () => {
           window.location.href = "/";
           return;
         }
-        if (result.data && result.data.data) {
-          setRecords(result.data.data);
+        if (result.data && result.data.records) {
+          setRecords(result.data.records);
           setTotalPages(Math.ceil(result.data.totalCount / rowsPerPage));
           setTotalCount(result.data.totalCount);
         }
